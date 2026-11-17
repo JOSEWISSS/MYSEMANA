@@ -1,0 +1,100 @@
+<!doctype html><html lang="es"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MiSemana (demo)</title>
+<style>
+:root{--bg:#f6f7fb;--fg:#1e1b3a;--card:#fff;--pri:#4f46e5;--mut:#6b7280;--line:#e5e7eb;--warn:#fef3c7;--warnfg:#92400e;color-scheme:light;padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f0f1a;--fg:#ececf6;--card:#1a1a2c;--mut:#9ca3af;--line:#2a2a40;--warn:#3b2f10;--warnfg:#fcd34d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f0f1a;--fg:#ececf6;--card:#1a1a2c;--mut:#9ca3af;--line:#2a2a40;--warn:#3b2f10;--warnfg:#fcd34d;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0}body{font-family:system-ui,sans-serif;font-size:18px;background:var(--bg);color:var(--fg)}
+.app{max-width:520px;margin:auto;padding:20px 16px 160px}h1,h2,h3{margin:8px 0}h1{font-size:1.6rem;text-transform:capitalize}
+ul{list-style:none;padding:0;margin:8px 0}
+button,input,select{font:inherit;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
+.task{display:flex;gap:14px;align-items:center;background:var(--card);padding:16px;border-radius:16px;margin-bottom:10px}
+.task input{width:28px;height:28px;padding:0}.task div{flex:1}.task b{display:block}.task small{color:var(--mut);font-size:.85rem}
+.task.done{opacity:.5}.task.done b{text-decoration:line-through}.task.late{border-left:5px solid #ef4444}
+.hint{color:var(--mut)}.badge{background:var(--warn);color:var(--warnfg);padding:12px 14px;border-radius:14px;font-weight:600}
+.fab{position:fixed;left:16px;right:16px;max-width:488px;margin:auto;bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--pri);color:#fff;border:0;font-weight:700;font-size:1.15rem;box-shadow:0 6px 16px #0004}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;border:0;background:none;border-radius:0}nav .on{color:var(--pri);font-weight:700}
+.card{background:var(--card);border-radius:18px;padding:16px;margin:10px 0}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}.day{border:0;padding:12px 0;position:relative}
+.day.today{background:var(--pri);color:#fff}.day.sel{outline:2px solid var(--pri)}.day.fest{color:#d97706;font-weight:700}.day.today.fest{color:#fff}
+.dot{position:absolute;bottom:3px;left:50%;width:6px;height:6px;margin-left:-3px;border-radius:50%;background:var(--pri)}.today .dot{background:#fff}
+.sheet{position:fixed;inset:0;background:#0007;display:flex;align-items:flex-end;justify-content:center;overflow:auto;z-index:5}
+.sheet .card{width:100%;max-width:520px;margin:0;border-radius:24px 24px 0 0;display:flex;flex-direction:column;gap:12px}
+.seg{display:flex;gap:8px}.seg button{flex:1;padding:12px 4px}.seg .on{background:var(--pri);color:#fff;border-color:var(--pri)}
+label{display:flex;flex-direction:column;gap:6px;color:var(--mut);font-size:.9rem}.row{display:flex;gap:10px}.row label{flex:1}
+.big{background:var(--pri);color:#fff;border:0;font-weight:700}
+.alert{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:10px;right:10px;max-width:500px;margin:auto;background:#b91c1c;color:#fff;padding:18px;border-radius:18px;z-index:9;box-shadow:0 8px 24px #0006}
+.alert .seg{margin-top:12px}.alert button{background:#fff;color:#111;border:0;font-weight:700}
+.demo{font-size:.75rem;text-align:center;color:var(--mut)}
+</style></head><body>
+<div class="app"><div id="main"></div><p class="demo">Demo: tus datos se guardan solo en este navegador.</p></div>
+<div id="over"></div><nav id="nav"></nav>
+<script>
+const $=s=>document.querySelector(s),pad=n=>String(n).padStart(2,'0'),key=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const addD=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n),toMon=d=>addD(d,(8-d.getDay())%7);
+function easter(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451);return new Date(y,Math.floor((h+l-7*m+114)/31)-1,((h+l-7*m+114)%31)+1)}
+const hc={};function hol(y){if(hc[y])return hc[y];const m={},D=(a,b)=>new Date(y,a-1,b),p=(d,n)=>m[key(d)]=n;
+p(D(1,1),'Año Nuevo');p(D(5,1),'Día del Trabajo');p(D(7,20),'Día de la Independencia');p(D(8,7),'Batalla de Boyacá');p(D(12,8),'Inmaculada Concepción');p(D(12,25),'Navidad');
+p(toMon(D(1,6)),'Día de Reyes');p(toMon(D(3,19)),'Día de San José');p(toMon(D(6,29)),'San Pedro y San Pablo');p(toMon(D(8,15)),'Asunción de la Virgen');p(toMon(D(10,12)),'Día de la Raza');p(toMon(D(11,1)),'Todos los Santos');p(toMon(D(11,11)),'Independencia de Cartagena');
+const e=easter(y);p(addD(e,-3),'Jueves Santo');p(addD(e,-2),'Viernes Santo');p(addD(e,43),'Ascensión del Señor');p(addD(e,64),'Corpus Christi');p(addD(e,71),'Sagrado Corazón');return hc[y]=m}
+const hname=d=>hol(d.getFullYear())[key(d)];
+const DAYS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+function parse(inp){let t=' '+inp.trim()+' ';const n=new Date(),d=new Date(n.getFullYear(),n.getMonth(),n.getDate());
+const cut=re=>{const m=norm(t).match(re);if(!m)return null;t=t.slice(0,m.index)+' '+t.slice(m.index+m[0].length);return m};
+if(cut(/\bpasado manana\b/))d.setDate(d.getDate()+2);else if(cut(/\bmanana\b(?! de la| por la)/))d.setDate(d.getDate()+1);else if(cut(/\bhoy\b/)){}
+else{const m=cut(new RegExp('\\b(?:el |este )?('+DAYS.map(norm).join('|')+')\\b'));if(m){const i=DAYS.map(norm).indexOf(m[1]);d.setDate(d.getDate()+((i-d.getDay()+7)%7||7))}}
+let time=null;const m=cut(/\b(?:a las?|a la)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm|de la manana|de la tarde|de la noche)?/);
+if(m){let h=+m[1];const mi=m[2]||'00',p=m[3]||'';if(/pm|tarde|noche/.test(p)){if(h<12)h+=12}else if(/am|manana/.test(p)){if(h===12)h=0}else if(h>=1&&h<=6)h+=12;time=pad(h)+':'+mi}
+t=t.replace(/\b(tengo que|tengo|debo)\b/gi,' ').replace(/\s+/g,' ').trim();return{title:(t.charAt(0).toUpperCase()+t.slice(1))||inp.trim(),date:key(d),time}}
+const st={get(k,f){try{return JSON.parse(localStorage.getItem(k))??f}catch{return f}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+const today=key(new Date()),fmt=t=>{if(!t)return 'Sin hora';let[h,m]=t.split(':').map(Number);return(h%12||12)+':'+pad(m)+(h<12?' AM':' PM')};
+let tasks=st.get('ms2:t',null);
+if(!tasks){const n=new Date(),soon=new Date(Date.now()+60000);tasks=[
+{id:1,title:'Tomar agua (ejemplo: suena en 1 minuto y se repite)',date:key(soon),time:pad(soon.getHours())+':'+pad(soon.getMinutes()),rep:5,imp:false,done:false},
+{id:2,title:'Pagar factura',date:today,time:'12:00',rep:10,imp:true,done:false},
+{id:3,title:'Comprar mercado',date:today,time:'17:00',rep:0,imp:false,done:false},
+{id:4,title:'Entregar documentos',date:key(addD(n,1)),time:'09:00',rep:0,imp:true,done:false}];st.set('ms2:t',tasks)}
+let tab='hoy',cal=new Date(),sel=today;cal=new Date(cal.getFullYear(),cal.getMonth(),1);
+const save=()=>{st.set('ms2:t',tasks);render()},esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const late=t=>{const n=new Date();return !t.done&&t.time&&(t.date<today||(t.date===today&&t.time<pad(n.getHours())+':'+pad(n.getMinutes())))};
+const item=t=>`<li class="task ${t.done?'done':''} ${late(t)?'late':''}"><input type="checkbox" ${t.done?'checked':''} onchange="tg(${t.id})" aria-label="Hecho"><div><b>${t.imp?'⭐ ':''}${esc(t.title)}</b><small>${fmt(t.time)}${t.rep?' · 🔁 cada '+t.rep+' min':''}</small></div><button onclick="rm(${t.id})" aria-label="Borrar">🗑️</button></li>`;
+const list=(a,e)=>a.length?`<ul>${a.sort((x,y)=>(x.time||'99').localeCompare(y.time||'99')).map(item).join('')}</ul>`:`<p class="hint">${e}</p>`;
+window.tg=id=>{const t=tasks.find(x=>x.id===id);t.done=!t.done;save()};window.rm=id=>{tasks=tasks.filter(x=>x.id!==id);save()};
+function render(){const n=new Date(),hn=hname(n);let h='';
+if(tab==='hoy'){const hoy=tasks.filter(t=>t.date===today&&!t.done),ok=tasks.filter(t=>t.date===today&&t.done).length,man=tasks.filter(t=>t.date===key(addD(n,1))&&!t.done);
+h=`<h1>${n.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'})}</h1>${hn?`<p class="badge">🇨🇴 Hoy es festivo: ${hn}</p>`:''}<h3>Para hoy</h3>${list(hoy,'No tienes nada pendiente hoy 🎉')}${ok?`<p class="hint">✅ ${ok} hecha${ok>1?'s':''} hoy</p>`:''}<h3>Mañana</h3>${list(man,'Nada para mañana')}`}
+if(tab==='cal'){const off=(cal.getDay()+6)%7,dim=new Date(cal.getFullYear(),cal.getMonth()+1,0).getDate(),real=[...Array(dim)].map((_,i)=>new Date(cal.getFullYear(),cal.getMonth(),i+1)),sh=hname(new Date(sel+'T00:00'));
+h=`<div class="card"><div class="row" style="justify-content:space-between;align-items:center"><button onclick="mv(-1)">‹</button><b>${MESES[cal.getMonth()]} ${cal.getFullYear()}</b><button onclick="mv(1)">›</button></div><div class="grid">${['L','M','M','J','V','S','D'].map(x=>`<small>${x}</small>`).join('')}${'<span></span>'.repeat(off)}${real.map(d=>{const k=key(d),c=tasks.some(t=>t.date===k&&!t.done);return `<button class="day ${k===today?'today':''} ${hname(d)?'fest':''} ${k===sel?'sel':''}" onclick="pk('${k}')">${d.getDate()}${c?'<i class="dot"></i>':''}</button>`}).join('')}</div>
+<p class="hint">Naranja = festivo 🇨🇴 · Punto = tienes tareas</p>${real.filter(d=>hname(d)).map(d=>`<div>🇨🇴 ${d.getDate()} — ${hname(d)}</div>`).join('')}</div>
+<h3>${new Date(sel+'T00:00').toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'})}${sh?' · 🇨🇴 '+sh:''}</h3>${list(tasks.filter(t=>t.date===sel),'Sin tareas este día')}`}
+if(tab==='aj')h=`<h1>Ajustes</h1><div class="card"><button class="big" onclick="askN()">🔔 Permitir avisos del navegador</button><br><br><button onclick="dk()" style="width:100%">🌙 Cambiar claro / oscuro</button><br><br><button onclick="ring(tasks[0])" style="width:100%">🚨 Probar una alarma</button></div><p class="hint">WhatsApp y correo vienen en la siguiente fase.</p>`;
+$('#main').innerHTML=h+(tab==='aj'?'':'<button class="fab" onclick="nf()">+ Nueva tarea</button>');
+$('#nav').innerHTML=[['hoy','🏠','Hoy'],['cal','📅','Calendario'],['aj','⚙️','Ajustes']].map(([k,i,l])=>`<button class="${tab===k?'on':''}" onclick="tab='${k}';render()">${i}<br><small>${l}</small></button>`).join('')}
+window.mv=d=>{cal=new Date(cal.getFullYear(),cal.getMonth()+d,1);render()};window.pk=k=>{sel=k;render()};
+window.dk=()=>{const r=document.documentElement;r.dataset.theme=getComputedStyle(r).colorScheme==='dark'?'light':'dark'};
+window.askN=()=>{if('Notification' in window)Notification.requestPermission()};
+let rep=0,imp=false;
+window.nf=()=>{rep=0;imp=false;$('#over').innerHTML=`<div class="sheet"><div class="card"><h2>Nueva tarea</h2>
+<label>¿Qué tienes que hacer?<input id="ti" placeholder="Ej: mañana a las 8 llevar los documentos"></label>
+<p class="hint" id="ok">Escribe como hablas y yo pongo el día y la hora.</p>
+<div class="row"><label>Día<input type="date" id="da" value="${today}"></label><label>Hora<input type="time" id="hr"></label></div>
+<label>Avisarme<div class="seg" id="rp"><button class="on" onclick="sr(0)">1 vez</button><button onclick="sr(5)">Cada 5 min</button><button onclick="sr(10)">Cada 10 min</button></div></label>
+<div class="seg"><button id="im" onclick="imp=!imp;this.classList.toggle('on',imp)">⭐ Es importante</button></div>
+<div class="row"><button style="flex:1" onclick="$('#over').innerHTML=''">Cancelar</button><button class="big" style="flex:2" onclick="sv()">Guardar</button></div></div></div>`;
+$('#ti').addEventListener('input',()=>{const p=parse($('#ti').value);$('#da').value=p.date;$('#hr').value=p.time||'';
+$('#ok').textContent='Se guardará: '+new Date(p.date+'T00:00').toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'})+(p.time?' · '+fmt(p.time):'')})};
+window.sr=v=>{rep=v;[...$('#rp').children].forEach((b,i)=>b.classList.toggle('on',[0,5,10][i]===v))};
+window.sv=()=>{const raw=$('#ti').value.trim();if(!raw)return;const p=parse(raw);tasks.push({id:Date.now(),title:p.title,date:$('#da').value,time:$('#hr').value||null,rep,imp,done:false});$('#over').innerHTML='';save()};
+function beep(){try{const c=new AudioContext(),o=c.createOscillator();o.connect(c.destination);o.frequency.value=880;o.start();setTimeout(()=>{o.stop();c.close()},400)}catch{}}
+window.ring=t=>{beep();try{navigator.vibrate&&navigator.vibrate([300,150,300])}catch{}
+if('Notification' in window&&Notification.permission==='granted')try{new Notification(t.imp?'🚨 Importante':'🔔 MiSemana',{body:t.title})}catch{}
+$('#over').innerHTML=`<div class="alert">${t.imp?'🚨 <b>IMPORTANTE</b>':'🔔 <b>Recordatorio</b>'}<br>${esc(t.title)}<br><small>${t.rep?'Te lo repito cada '+t.rep+' min hasta que lo marques como hecho.':''}</small>
+<div class="seg"><button onclick="ad(${t.id},'done')">✅ Ya lo hice</button><button onclick="ad(${t.id},'snz')">⏰ 10 min más</button></div></div>`};
+window.ad=(id,a)=>{const t=tasks.find(x=>x.id===id);if(t){if(a==='done')t.done=true;else{const d=new Date(Date.now()+600000);t.date=key(d);t.time=pad(d.getHours())+':'+pad(d.getMinutes());t.last=Date.now()}}$('#over').innerHTML='';save()};
+setInterval(()=>{if($('#over').innerHTML)return;const now=Date.now();for(const t of tasks){if(t.done||!t.time)continue;const at=new Date(t.date+'T'+t.time).getTime();
+if(now>=at&&now-at<864e5&&(t.rep?now-(t.last||0)>=t.rep*60000:!t.last)){t.last=now;st.set('ms2:t',tasks);ring(t);break}}},15000);
+render();
+</script></body></html>
